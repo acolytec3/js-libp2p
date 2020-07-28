@@ -117,6 +117,28 @@ module.exports.hop = async function hop ({
   throw errCode(new Error(`HOP request failed with code ${response.code}`), Errors.ERR_HOP_REQUEST_FAILED)
 }
 
+// TODO: DOCS
+module.exports.canHop = async function canHop ({
+  connection
+}) {
+  // Create a new stream to the relay
+  const { stream } = await connection.newStream([multicodec.relay])
+  // Send the HOP request
+  const streamHandler = new StreamHandler({ stream })
+  streamHandler.write({
+    type: CircuitPB.Type.CAN_HOP
+  })
+
+  const response = await streamHandler.read()
+  await streamHandler.close()
+
+  if (response.code !== CircuitPB.Status.SUCCESS) {
+    return false
+  }
+
+  return true
+}
+
 /**
  * Creates an unencoded CAN_HOP response based on the Circuits configuration
  * @private
